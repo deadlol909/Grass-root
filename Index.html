@@ -2,9 +2,88 @@
 <html>
 <head>
   <title>Grass Root Chat 🌱</title>
+  <style>
+    body { margin:0; font-family: Arial; background:#111; color:white; }
+    #login, #chat { display:none; padding:20px; }
+    #login { display:block; text-align:center; }
+    input, button { padding:10px; margin:10px; border-radius:5px; border:none; }
+    #messages { height:60vh; overflow-y:auto; border:1px solid #444; padding:10px; }
+    .msg { margin:10px 0; }
+    img { width:30px; border-radius:50%; vertical-align:middle; }
+  </style>
 </head>
+
 <body>
-  <h2>Welcome to Grass Root Chat!</h2>
-  <p>We’ll add login and chat features next.</p>
+
+<div id="login">
+  <h2>🌱 Grass Root Chat</h2>
+  <input id="username" placeholder="Enter username"><br>
+  <input type="file" id="avatar"><br>
+  <button onclick="enterChat()">Enter Chat</button>
+</div>
+
+<div id="chat">
+  <h3>Chat Room 💬</h3>
+  <div id="messages"></div>
+  <input id="msg" placeholder="Type message">
+  <button onclick="sendMsg()">Send</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ✅ Your Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAqOoDkff-8wcNJtcieEbeL82FzMMun7zQ",
+  authDomain: "z-spl-ddcf0.firebaseapp.com",
+  databaseURL: "https://z-spl-ddcf0-default-rtdb.firebaseio.com/",
+  projectId: "z-spl-ddcf0",
+  storageBucket: "z-spl-ddcf0.appspot.com",
+  messagingSenderId: "1085594288690",
+  appId: "1:1085594288690:web:d3b4ed7a33c5411542f22b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let user = "";
+let avatarURL = "";
+
+window.enterChat = function() {
+  user = document.getElementById("username").value;
+  const file = document.getElementById("avatar").files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    avatarURL = e.target.result;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("chat").style.display = "block";
+    loadMessages();
+  };
+  if (file) reader.readAsDataURL(file);
+};
+
+window.sendMsg = function() {
+  const msg = document.getElementById("msg").value;
+  push(ref(db, "messages"), {
+    user,
+    msg,
+    avatar: avatarURL,
+    time: new Date().toLocaleTimeString()
+  });
+  document.getElementById("msg").value = "";
+};
+
+function loadMessages() {
+  onChildAdded(ref(db, "messages"), (data) => {
+    const m = data.val();
+    const div = document.createElement("div");
+    div.className = "msg";
+    div.innerHTML = `<img src="${m.avatar}"> <b>${m.user}</b>: ${m.msg} <small>${m.time}</small>`;
+    document.getElementById("messages").appendChild(div);
+  });
+}
+</script>
+
 </body>
 </html>
